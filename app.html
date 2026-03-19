@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Video Chat</title>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+    }
+
+    h2 {
+      margin: 15px 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .video-box {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    video {
+      width: 320px;
+      max-width: 90%;
+      border-radius: 12px;
+      background: black;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .controls {
+      margin-top: 15px;
+    }
+
+    input {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      margin-right: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background: #22c55e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #16a34a;
+    }
+
+    .my-id {
+      margin: 10px;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+
+    @media (max-width: 600px) {
+      video {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>📹 Simple Video Chat</h2>
+
+  <div class="my-id">
+    Your ID: <span id="myId"></span>
+  </div>
+
+  <div class="video-box">
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay></video>
+  </div>
+
+  <div class="controls">
+    <input id="remoteId" placeholder="Enter ID">
+    <button onclick="callUser()">Call</button>
+  </div>
+</div>
+
+<script>
+const peer = new Peer();
+let localStream;
+
+peer.on('open', id => {
+  document.getElementById('myId').innerText = id;
+});
+
+async function startCamera() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
+    document.getElementById('localVideo').srcObject = localStream;
+  } catch (err) {
+    alert("Camera access denied!");
+  }
+}
+
+startCamera();
+
+function callUser() {
+  const remoteId = document.getElementById('remoteId').value;
+  if (!remoteId) {
+    alert("Enter ID first!");
+    return;
+  }
+
+  const call = peer.call(remoteId, localStream);
+
+  call.on('stream', remoteStream => {
+    document.getElementById('remoteVideo').srcObject = remoteStream;
+  });
+}
+
+peer.on('call', call => {
+  call.answer(localStream);
+
+  call.on('stream', remoteStream => {
+    document.getElementById('remoteVideo').srcObject = remoteStream;
+  });
+});
+</script>
+
+</body>
+</html>
